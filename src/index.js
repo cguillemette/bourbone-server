@@ -14,15 +14,19 @@ app.use(express.static(__dirname + '/../.tmp'));
 app.use(bodyParser.urlencoded({ extended: false }));  // parse application/x-www-form-urlencoded
 app.use(bodyParser.json());                           // parse application/json
 
+// We need to set to 9005 (to match gruntfile - 'grunt serve') but also when using 'node-debug src/index.js'.
+// Otherwise, it randomly takes a port which the UI does not expect which prevents debugging from working.
+app.set('port', process.env.PORT || 9005);
+
+var server = app.listen(app.get('port'), function() {
+    console.log('Express server listening on port ' + server.address().port);
+});
+
 app.get('/api/v1/links', function(request, response, next) {
     return deps.linksClient.get()
-    .then(function(links) {
-        for (var i = 0; i < links.links.length; i++) {
-            var link = links.links[i];
-            link.id = link._id;
-        }
+    .then(function(result) {
         response.json({
-            links: links.links
+            links: result.links
         });
     })
     .catch(next);
